@@ -285,7 +285,8 @@ private:
         std::cout << "2. Rumble (GameInput 1.0 - traditional)" << std::endl;
         std::cout << "3. Haptic (GameInput 2.0 - modern)" << std::endl;
         std::cout << "4. Hybrid (try both APIs)" << std::endl;
-        std::cout << "Select (1-4) or press any other key to return: ";
+        std::cout << "5. Haptic Emulation (strong bursts)" << std::endl;
+        std::cout << "Select (1-5) or press any other key to return: ";
 
         char choice = _getch();
         
@@ -301,6 +302,9 @@ private:
                 break;
             case '4':
                 settings.preferredMode = HapticController::HapticMode::Hybrid;
+                break;
+            case '5':
+                settings.preferredMode = HapticController::HapticMode::HapticEmulation;
                 break;
             default:
                 std::cout << "\n";

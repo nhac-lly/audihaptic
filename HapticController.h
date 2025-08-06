@@ -18,10 +18,11 @@ using namespace GameInput::v1;
 class HapticController {
 public:
     enum class HapticMode {
-        Auto,       // Automatically detect best available mode
-        Rumble,     // Use traditional rumble API (GameInput 1.0)
-        Haptic,     // Use modern haptic API (GameInput 2.0)
-        Hybrid      // Use both if available
+        Auto,           // Automatically detect best available mode
+        Rumble,         // Use traditional rumble API (GameInput 1.0)
+        Haptic,         // Use modern haptic API (GameInput 2.0)
+        Hybrid,         // Use both if available
+        HapticEmulation // Strong, short bursts to simulate haptics
     };
 
     struct HapticSettings {
@@ -42,6 +43,11 @@ public:
         
         // API preference
         HapticMode preferredMode = HapticMode::Auto;  // Preferred haptic mode
+        
+        // Haptic emulation settings
+        float emulationBurstDuration = 0.05f;  // Duration of haptic bursts in seconds (0.01 - 0.2)
+        float emulationMinInterval = 0.1f;     // Minimum interval between bursts in seconds (0.05 - 0.5)
+        float emulationIntensity = 3.0f;       // Intensity multiplier for emulated haptics (3x stronger)
     };
 
     HapticController();
@@ -101,6 +107,9 @@ private:
     
     // Device capability detection
     void DetectDeviceCapabilities(GamepadInfo& gamepad);
+    
+    // Haptic emulation
+    void ProcessHapticEmulation(float leftMotor, float rightMotor, float leftTrigger, float rightTrigger);
 
     
     // GameInput
@@ -115,4 +124,10 @@ private:
     
     // Timing
     std::chrono::steady_clock::time_point m_lastUpdate;
+    
+    // Haptic emulation state
+    std::chrono::steady_clock::time_point m_lastHapticBurst;
+    bool m_hapticBurstActive;
+    std::chrono::steady_clock::time_point m_hapticBurstStart;
+    bool m_leftMotorTurn;  // Alternates between left and right motor
 };

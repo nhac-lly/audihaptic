@@ -6,6 +6,10 @@ HapticController::HapticController()
     : m_gameInput(nullptr)
     , m_activeMode(HapticMode::Auto)
     , m_lastUpdate(std::chrono::steady_clock::now())
+    , m_lastHapticBurst(std::chrono::steady_clock::now())
+    , m_hapticBurstActive(false)
+    , m_hapticBurstStart(std::chrono::steady_clock::now())
+    , m_leftMotorTurn(true)
 {
 }
 
@@ -45,6 +49,10 @@ bool HapticController::Initialize() {
         case HapticMode::Hybrid:
             m_activeMode = HapticMode::Hybrid;
             std::cout << "Using Hybrid mode (both APIs)" << std::endl;
+            break;
+        case HapticMode::HapticEmulation:
+            m_activeMode = HapticMode::HapticEmulation;
+            std::cout << "Using Haptic Emulation mode (strong bursts)" << std::endl;
             break;
     }
     
@@ -232,6 +240,13 @@ void HapticController::SetRumble(float leftMotor, float rightMotor, float leftTr
     leftTrigger = std::clamp(leftTrigger, 0.0f, 1.0f);
     rightTrigger = std::clamp(rightTrigger, 0.0f, 1.0f);
 
+    // Handle haptic emulation mode
+    if (m_activeMode == HapticMode::HapticEmulation) {
+        ProcessHapticEmulation(leftMotor, rightMotor, leftTrigger, rightTrigger);
+        return;
+    }
+
+    // Standard rumble mode
     for (auto& gamepad : m_gamepads) {
         if (gamepad.device) {
             GameInputRumbleParams params = {};
@@ -287,7 +302,80 @@ const char* HapticController::GetHapticModeString() const {
         case HapticMode::Rumble: return "Rumble (GameInput 1.0)";
         case HapticMode::Haptic: return "Haptic (GameInput 2.0)";
         case HapticMode::Hybrid: return "Hybrid (Both APIs)";
+        case HapticMode::HapticEmulation: return "Haptic Emulation (Strong Bursts)";
         default: return "Unknown";
+    }
+}
+
+void HapticController::ProcessHapticEmulation(float leftMotor, float rightMotor, float leftTrigger, float rightTrigger) {
+    auto now = std::chrono::steady_clock::now();
+    
+    // Calculate overall intensity from all inputs
+    float totalIntensity = (leftMotor + rightMotor + leftTrigger + rightTrigger) / 4.0f;
+    totalIntensity *= m_settings.emulationIntensity;
+    
+    // Check if we should trigger a new haptic burst
+    bool shouldTriggerBurst = false;
+    
+    if (totalIntensity > 0.1f) { // Only trigger if there's significant intensity
+        auto timeSinceLastBurst = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_lastHapticBurst).count() / 1000.0f;
+        
+        if (timeSinceLastBurst >= m_settings.emulationMinInterval) {
+            shouldTriggerBurst = true;
+            m_lastHapticBurst = now;
+            m_hapticBurstActive = true;
+            m_hapticBurstStart = now;
+            
+            // Alternate between left and right motor
+            m_leftMotorTurn = !m_leftMotorTurn;
+        }
+    }
+    
+    // Check if current burst should end
+    if (m_hapticBurstActive) {
+        auto burstDuration = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_hapticBurstStart).count() / 1000.0f;
+        if (burstDuration >= m_settings.emulationBurstDuration) {
+            m_hapticBurstActive = false;
+        }
+    }
+    
+    // Apply haptic burst or stop
+    for (auto& gamepad : m_gamepads) {
+        if (gamepad.device) {
+            GameInputRumbleParams params = {};
+            
+            if (m_hapticBurstActive || shouldTriggerBurst) {
+                // Strong, short burst - 3x intensity, alternating left/right
+                float burstIntensity = std::clamp(totalIntensity, 0.0f, 1.0f);
+                
+                if (m_leftMotorTurn) {
+                    // Left motor burst
+                    params.lowFrequency = burstIntensity;    // Strong left motor
+                    params.highFrequency = 0.0f;             // Silent right motor
+                } else {
+                    // Right motor burst  
+                    params.lowFrequency = 0.0f;              // Silent left motor
+                    params.highFrequency = burstIntensity;   // Strong right motor
+                }
+                
+                // Light trigger feedback for both
+                params.leftTrigger = burstIntensity * 0.3f;
+                params.rightTrigger = burstIntensity * 0.3f;
+            } else {
+                // No haptic feedback - complete silence between bursts
+                params.lowFrequency = 0.0f;
+                params.highFrequency = 0.0f;
+                params.leftTrigger = 0.0f;
+                params.rightTrigger = 0.0f;
+            }
+            
+            gamepad.device->SetRumbleState(&params);
+            
+            gamepad.currentLeftMotor = params.lowFrequency;
+            gamepad.currentRightMotor = params.highFrequency;
+            gamepad.currentLeftTrigger = params.leftTrigger;
+            gamepad.currentRightTrigger = params.rightTrigger;
+        }
     }
 }
 
