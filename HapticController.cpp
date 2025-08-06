@@ -69,12 +69,11 @@ bool HapticController::FindGamepads() {
         return false;
     }
 
-    // Clean up existing devices first
-    CleanupDevices();
-
-    // Enumerate gamepad devices
+    // Enumerate gamepad devices without cleaning up existing ones
     IGameInputReading* reading = nullptr;
     HRESULT hr = m_gameInput->GetCurrentReading(GameInputKindGamepad, nullptr, &reading);
+    
+    bool foundNewDevice = false;
     
     if (SUCCEEDED(hr) && reading) {
         IGameInputDevice* device = nullptr;
@@ -99,24 +98,33 @@ bool HapticController::FindGamepads() {
                 DetectDeviceCapabilities(info);
                 
                 m_gamepads.push_back(info);
+                foundNewDevice = true;
                 
-                std::cout << "Found gamepad device - Rumble: " << (info.supportsRumble ? "Yes" : "No") 
+                std::cout << "Found new gamepad device - Rumble: " << (info.supportsRumble ? "Yes" : "No") 
                          << ", Haptics: " << (info.supportsHaptics ? "Yes" : "No") << std::endl;
+                std::cout << "Total gamepads found: " << m_gamepads.size() << std::endl;
             }
         }
         reading->Release();
     }
 
-    std::cout << "Total gamepads found: " << m_gamepads.size() << std::endl;
+    // Only print total if this is the initial scan or we found a new device
+    static bool initialScanDone = false;
+    if (!initialScanDone) {
+        std::cout << "Total gamepads found: " << m_gamepads.size() << std::endl;
+        initialScanDone = true;
+    }
+    
     return !m_gamepads.empty();
 }
 
 void HapticController::UpdateDevices() {
-    // Periodically check for new devices
+    // Periodically check for new devices (less frequently)
     auto now = std::chrono::steady_clock::now();
     static auto lastDeviceCheck = now;
     
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastDeviceCheck).count() > 1000) {
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastDeviceCheck).count() > 5000) {
+        // Only scan for new devices, don't clean up existing ones
         FindGamepads();
         lastDeviceCheck = now;
     }
@@ -305,8 +313,7 @@ void HapticController::DetectDeviceCapabilities(GamepadInfo& gamepad) {
             gamepad.hapticMotorCount = 0;
         }
         
-        std::cout << "Device capabilities - Rumble: " << (gamepad.supportsRumble ? "Yes" : "No")
-                  << ", Haptic motors: " << gamepad.hapticMotorCount << std::endl;
+        // Device capabilities detected (details shown in device discovery)
     } else {
         std::cerr << "Failed to get device info: " << std::hex << hr << std::endl;
         // Default to basic rumble support

@@ -89,11 +89,13 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AudioCaptureManager.cpp" />
     <ClCompile Include="HapticController.cpp" />
+
     <ClCompile Include="AudioProcessor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioCaptureManager.h" />
     <ClInclude Include="HapticController.h" />
+
     <ClInclude Include="AudioProcessor.h" />
     <ClInclude Include="GameInputConfig.h" />
   </ItemGroup>

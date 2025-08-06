@@ -7,6 +7,7 @@
 #include <chrono>
 #include "AudioProcessor.h"
 
+
 // Use appropriate GameInput namespace
 #if GAMEINPUT_API_VERSION >= 2
 using namespace GameInput::v2;
@@ -52,6 +53,9 @@ public:
     // Device management
     bool FindGamepads();
     size_t GetGamepadCount() const { return m_gamepads.size(); }
+    std::string GetDeviceStatusString() const {
+        return "Connected gamepads: " + std::to_string(m_gamepads.size());
+    }
     
     // Haptic feedback
     void ProcessAudioFeatures(const AudioProcessor::AudioFeatures& features);
@@ -102,6 +106,8 @@ private:
     // GameInput
     IGameInput* m_gameInput;
     std::vector<GamepadInfo> m_gamepads;
+    
+
     
     // Settings
     HapticSettings m_settings;

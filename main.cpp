@@ -53,7 +53,7 @@ public:
         }
 
         std::cout << "\n=== Audio-to-Haptics Active ===" << std::endl;
-        std::cout << "Connected gamepads: " << m_hapticController.GetGamepadCount() << std::endl;
+        std::cout << m_hapticController.GetDeviceStatusString() << std::endl;
         std::cout << "Haptic mode: " << m_hapticController.GetHapticModeString() << std::endl;
         std::cout << "\nControls:" << std::endl;
         std::cout << "  [Q] Quit" << std::endl;
@@ -326,7 +326,7 @@ private:
     void RefreshDevices() {
         std::cout << "\n\nRefreshing devices..." << std::endl;
         m_hapticController.FindGamepads();
-        std::cout << "Connected gamepads: " << m_hapticController.GetGamepadCount() << std::endl;
+        std::cout << m_hapticController.GetDeviceStatusString() << std::endl;
         std::cout << "Haptic mode: " << m_hapticController.GetHapticModeString() << std::endl;
         std::cout << "Press any key to continue..." << std::endl;
         _getch();
