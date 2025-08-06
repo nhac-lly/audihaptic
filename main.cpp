@@ -122,7 +122,7 @@ private:
             int filled = static_cast<int>(value * width);
             std::string bar = "[";
             for (int i = 0; i < width; ++i) {
-                bar += (i < filled) ? "█" : "░";
+                bar += (i < filled) ? "|" : "-";
             }
             bar += "]";
             return bar;
