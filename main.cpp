@@ -92,6 +92,42 @@ public:
         std::cout << "\nShutting down..." << std::endl;
     }
 
+    void RunService() {
+        // Service mode - non-blocking, no console UI
+        std::cout << "Starting Audio-to-Haptics Service..." << std::endl;
+        
+        try {
+            if (!m_audioCapture.StartCapture()) {
+                std::cerr << "Failed to start audio capture" << std::endl;
+                return;
+            }
+
+            m_running = true;
+            std::cout << "Audio-to-Haptics Service started successfully" << std::endl;
+
+            while (m_running) {
+                // Update devices periodically
+                m_hapticController.UpdateDevices();
+                
+                // Sleep to prevent high CPU usage
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            m_audioCapture.StopCapture();
+            m_hapticController.StopAllHaptics();
+            std::cout << "Audio-to-Haptics Service stopped" << std::endl;
+            
+        } catch (const std::exception& e) {
+            std::cerr << "Service error: " << e.what() << std::endl;
+        } catch (...) {
+            std::cerr << "Unknown service error occurred" << std::endl;
+        }
+    }
+
+    void Shutdown() {
+        m_running = false;
+    }
+
 private:
     void OnAudioData(const float* samples, size_t sampleCount, size_t channels) {
         // Process audio to extract features
@@ -345,10 +381,44 @@ private:
     
     std::mutex m_featuresMutex;
     AudioProcessor::AudioFeatures m_latestFeatures{};
+    bool m_running = false;
 };
 
-int main() {
+int main(int argc, char* argv[]) {
     try {
+        // Check for command-line arguments
+        if (argc > 1) {
+            std::string arg = argv[1];
+            if (arg == "--console") {
+                // Run as console application
+                AudioHapticsApp app;
+                if (!app.Initialize()) {
+                    std::cerr << "Failed to initialize application" << std::endl;
+                    return -1;
+                }
+                app.Run();
+                return 0;
+            }
+            else if (arg == "--service") {
+                // Run as service (non-blocking)
+                AudioHapticsApp app;
+                if (!app.Initialize()) {
+                    std::cerr << "Failed to initialize service" << std::endl;
+                    return -1;
+                }
+                app.RunService();
+                return 0;
+            }
+            else if (arg == "--help") {
+                std::cout << "Audio-to-Haptics Usage:" << std::endl;
+                std::cout << "  --console    Run as console application (default)" << std::endl;
+                std::cout << "  --service    Run as background service" << std::endl;
+                std::cout << "  --help       Show this help message" << std::endl;
+                return 0;
+            }
+        }
+
+        // Default: run as console application
         AudioHapticsApp app;
         
         if (!app.Initialize()) {
