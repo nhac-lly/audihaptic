@@ -26,10 +26,10 @@ public:
     };
 
     struct HapticSettings {
-        float bassIntensity = 1.0f;      // Intensity multiplier for bass (0.0 - 2.0)
-        float trebleIntensity = 0.8f;    // Intensity multiplier for treble (0.0 - 2.0)
-        float volumeIntensity = 0.6f;    // Intensity multiplier for overall volume (0.0 - 2.0)
-        float dynamicIntensity = 0.4f;   // Intensity multiplier for dynamic range (0.0 - 2.0)
+        float bassIntensity = 0.0f;      // Intensity multiplier for bass (0.0 - 2.0)
+        float trebleIntensity = 0.0f;    // Intensity multiplier for treble (0.0 - 2.0)
+        float volumeIntensity = 2.0f;    // Intensity multiplier for overall volume (0.0 - 2.0)
+        float dynamicIntensity = 2.0f;   // Intensity multiplier for dynamic range (0.0 - 2.0)
         
         // Motor assignments (which motors to use for different frequency ranges)
         bool useLowFrequencyMotor = true;   // Use low-frequency motor for bass
@@ -42,12 +42,13 @@ public:
         uint32_t fadeTimeMs = 100;          // Fade time for smooth transitions
         
         // API preference
-        HapticMode preferredMode = HapticMode::Auto;  // Preferred haptic mode
+        HapticMode preferredMode = HapticMode::HapticEmulation;  // Preferred haptic mode
         
         // Haptic emulation settings
         float emulationBurstDuration = 0.05f;  // Duration of haptic bursts in seconds (0.01 - 0.2)
         float emulationMinInterval = 0.1f;     // Minimum interval between bursts in seconds (0.05 - 0.5)
         float emulationIntensity = 3.0f;       // Intensity multiplier for emulated haptics (3x stronger)
+        float emulationVolumeThreshold = 0.3f; // Volume threshold - no haptics below 30%
     };
 
     HapticController();

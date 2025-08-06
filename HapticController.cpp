@@ -317,7 +317,8 @@ void HapticController::ProcessHapticEmulation(float leftMotor, float rightMotor,
     // Check if we should trigger a new haptic burst
     bool shouldTriggerBurst = false;
     
-    if (totalIntensity > 0.1f) { // Only trigger if there's significant intensity
+    // Only trigger if there's significant intensity AND volume is above threshold
+    if (totalIntensity > 0.1f && totalIntensity >= m_settings.emulationVolumeThreshold) {
         auto timeSinceLastBurst = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_lastHapticBurst).count() / 1000.0f;
         
         if (timeSinceLastBurst >= m_settings.emulationMinInterval) {

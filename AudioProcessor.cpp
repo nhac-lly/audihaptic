@@ -4,7 +4,7 @@
 
 AudioProcessor::AudioProcessor()
     : m_sampleRate(44100)
-    , m_sensitivity(1.0f)
+    , m_sensitivity(4.0f)   // Default to 4x sensitivity
     , m_bassCutoff(0.1f)    // ~4.4kHz at 44.1kHz
     , m_trebleCutoff(0.3f)  // ~13.2kHz at 44.1kHz
     , m_bassFilterState(0.0f)

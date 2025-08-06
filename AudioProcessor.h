@@ -23,7 +23,7 @@ public:
 
     // Configuration
     void SetSampleRate(uint32_t sampleRate);
-    void SetSensitivity(float sensitivity) { m_sensitivity = std::clamp(sensitivity, 0.1f, 5.0f); }
+    void SetSensitivity(float sensitivity) { m_sensitivity = std::clamp(sensitivity, 0.1f, 6.0f); }
     void SetFrequencyBands(float bassCutoff, float trebleCutoff);
 
 private:

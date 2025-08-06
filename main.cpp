@@ -35,7 +35,7 @@ public:
 
         // Set up audio processor
         m_audioProcessor.SetSampleRate(m_audioCapture.GetSampleRate());
-        m_audioProcessor.SetSensitivity(1.5f); // Start with moderate sensitivity
+        m_audioProcessor.SetSensitivity(4.0f); // Start with ultra sensitivity (4x)
 
         // Set up audio callback
         m_audioCapture.SetAudioCallback([this](const float* samples, size_t sampleCount, size_t channels) {
@@ -176,10 +176,11 @@ private:
         std::cout << "3. High (1.5x)" << std::endl;
         std::cout << "4. Very High (2.0x)" << std::endl;
         std::cout << "5. Extreme (3.0x)" << std::endl;
-        std::cout << "Select (1-5): ";
+        std::cout << "6. Ultra (4.0x)" << std::endl;
+        std::cout << "Select (1-6): ";
 
         char choice = _getch();
-        float sensitivity = 1.0f;
+        float sensitivity = 4.0f; // Default to 4x
 
         switch (choice) {
             case '1': sensitivity = 0.5f; break;
@@ -187,6 +188,7 @@ private:
             case '3': sensitivity = 1.5f; break;
             case '4': sensitivity = 2.0f; break;
             case '5': sensitivity = 3.0f; break;
+            case '6': sensitivity = 4.0f; break;
             default:
                 std::cout << "\nInvalid choice. Keeping current setting." << std::endl;
                 return;
